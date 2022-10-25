@@ -807,5 +807,50 @@ SENSOR_MAP = {
         MAP_NAME: "model",
         MAP_SYSTEM: None,
         MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "runtime": {
+        MAP_NAME: "runtime",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "rrain_piezo": {
+        MAP_NAME: "rrain_piezo",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "erain_piezo": {
+        MAP_NAME: "erain_piezo",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "hrain_piezo": {
+        MAP_NAME: "hrain_piezo",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "drain_piezo": {
+        MAP_NAME: "drain_piezo",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "wrain_piezo": {
+        MAP_NAME: "wrain_piezo",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "mrain_piezo": {
+        MAP_NAME: "mrain_piezo",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "yrain_piezo": {
+        MAP_NAME: "yrain_piezo",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "ws90cap_volt": {
+        MAP_NAME: "ws90cap_volt",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "ws90_ver": {
+        MAP_NAME: "ws90_ver",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
+    }, "wh90batt": {
+        MAP_NAME: "wh90batt",
+        MAP_SYSTEM: None,
+        MAP_STYPE: EcoWittSensorTypes.internal,
     }
+    
 }

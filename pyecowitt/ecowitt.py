@@ -4,10 +4,13 @@ GW1000 or in my case, HP3501, decode results.
 """
 
 import asyncio
+import re
 from aiohttp import web
 import logging
 import math
 import time
+
+from requests import RequestException
 
 from .sensor_map import (
     EcoWittSensorTypes,
@@ -412,6 +415,8 @@ class EcoWittListener:
             self.data_valid = True
             self.lastupd = time.time()
             self.parse_ws_data(weather_data)
+            weather_data["ip_address"] = request.remote
+            print(self.list_sensor_keys())
             for rl in self.r_listeners:
                 try:
                     await rl(weather_data)

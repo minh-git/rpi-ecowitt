@@ -1,4 +1,4 @@
-from ecowitt import EcoWittListener
+import pyecowitt.ecowitt as ecowitt
 import asyncio
 import sys
 
@@ -8,7 +8,7 @@ def usage():
 
 async def my_handler(data):
     print("In my handler")
-    # print(data)
+    print(data)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
