@@ -1,0 +1,76 @@
+<!-- layout.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aiohttp and jinja test</title>
+</head>
+
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    Current times (Raspberry Pi) at Melbourne GMT+11:
+                </td>
+                <td>
+                    {{ time_rpi }}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Latest record times (Raspberry Pi) at Melbourne GMT+11:
+                </td>
+                <td>
+                    {{ localised_time_last_record_rpi }}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Latest record times (Ecowitt):
+                </td>
+                <td>
+                    {{ data.dateutc }}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Folder size:
+                </td>
+                <td>
+                    {{ size }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table>
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for key, value in data.items() %}
+            <tr>
+                <td> {{ key }} </td>
+                <td> {{ value }} </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {%block body%}{%endblock%}
+
+</body>
+
+</html>

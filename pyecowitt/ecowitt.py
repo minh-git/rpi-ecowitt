@@ -9,8 +9,16 @@ from aiohttp import web
 import logging
 import math
 import time
-
+from datetime import datetime
 from requests import RequestException
+import pathlib
+import sys
+
+import jinja2
+import aiohttp_jinja2
+import pytz
+
+
 
 from .sensor_map import (
     EcoWittSensorTypes,
@@ -84,7 +92,8 @@ class EcoWittListener:
         # API Constants
         self.port = port
         self.path = None
-
+        self.current_data = None
+        ata = None
         # internal states
         self.server = None
         self.runner = None
@@ -95,6 +104,9 @@ class EcoWittListener:
         self.log = logging.getLogger(__name__)
         self.lastupd = 0
         self.windchill_type = WINDCHILL_HYBRID
+        
+        
+        
         self.new_sensor_cb = None
 
         # storage
@@ -403,59 +415,121 @@ class EcoWittListener:
             sensor_dev.set_value(weather_data[sensor])
             sensor_dev.set_lastupd(time.time())
             sensor_dev.set_lastupd_m(time.monotonic())
+# my_web_app.py
 
-    async def handler(self, request: web.BaseRequest):
-        if (request.method == 'POST'):
-            data = await request.post()
-            # data is not a dict, it's a MultiDict
-            data_copy = {}
-            for k in data.keys():
-                data_copy[k] = data[k]
-            weather_data = self.convert_units(data_copy)
-            self.last_values = weather_data.copy()
-            self.data_valid = True
-            self.lastupd = time.time()
-            self.parse_ws_data(weather_data)
-            weather_data["ip_address"] = request.remote
-            for rl in self.r_listeners:
-                try:
-                    await rl(weather_data,self.path)
-                except Exception as e:
-                    print(e)
-                    pass
 
+
+    async def post_handler(self, request: web.BaseRequest):
+
+        data = await request.post()
+        # data is not a dict, it's a MultiDict
+        data_copy = {}
+        for k in data.keys():
+            data_copy[k] = data[k]
+        weather_data = self.convert_units(data_copy)
+        self.last_values = weather_data.copy()
+        self.data_valid = True
+        self.lastupd = time.time()
+        self.parse_ws_data(weather_data)
+        weather_data["ip_address"] = request.remote
+        weather_data['systemtimeutc'] = datetime.utcnow()
+        for rl in self.r_listeners:
+            try:
+                await rl(weather_data,self.path)
+            except Exception as e:
+                print(e)
+                pass
+        self.current_data = weather_data
         return web.Response(text="OK")
 
-    async def wait_for_valid_data(self):
-        """ Wait for valid data, then return true. """
-        while not self.data_valid:
-            await asyncio.sleep(1)
-        return self.data_valid
+    # async def get_handler(self, request: web.BaseRequest):
+    #     return web.Response(text=str(self.current_data))
+        
+    # async def wait_for_valid_data(self):
+    #     """ Wait for valid data, then return true. """
+    #     while not self.data_valid:
+    #         await asyncio.sleep(1)
+    #     return self.data_valid
 
-    async def listen(self):
-        """ Listen and process."""
+    # async def listen(self):
+    #     """ Listen and process."""
 
-        self.server = web.Server(self.handler)
-        self.runner = web.ServerRunner(self.server)
-        await self.runner.setup()
-        self.site = web.TCPSite(self.runner, port=self.port)
-        await self.site.start()
+    #     self.server = web.Server(self.handler)
+    #     self.runner = web.ServerRunner(self.server)
+    #     await self.runner.setup()
+    #     self.site = web.TCPSite(self.runner, port=self.port)
+    #     await self.site.start()
 
-        while True:
-            await asyncio.sleep(10000)
+    #     while True:
+    #         await asyncio.sleep(10000)
+
+    # async def stop(self):
+    #     await self.site.stop()
+
+    # async def start(self):
+    #     loop = asyncio.get_event_loop()
+    #     try:
+    #         task = loop.create_task(self.listen())
+    #         await task
+    #     except Exception as e:
+    #         self.log.error("Exiting listener {0}".format(str(e)))
+    #     finally:
+    #         loop.close()
+
+    async def get_handler(self, request):
+        import os
+        context = {}
+        tz = pytz.timezone('Australia/Sydney')
+        now = datetime.now(tz)
+        context['time_rpi'] = now
+  
+        # Get the size (in bytes)
+        # of specified path 
+        BASE_PATH = pathlib.Path(__file__).parent.resolve()
+        context['size'] = os.stat(f'{self.path}').st_size
+        print(self.path)
+        print(context['size'])
+        if self.current_data:
+            context['data'] = self.current_data
+            loc_time = pytz.utc.localize(self.current_data['systemtimeutc'], is_dst=None).astimezone(tz)
+            context['localised_time_last_record_rpi'] = loc_time
+        else:
+            context['data'] = {}
+        response = aiohttp_jinja2.render_template('layout.html',request,context)
+        return response
+
+
+    def start(self):
+
+        logging.basicConfig(level=logging.DEBUG)
+
+        app = web.Application()
+        BASE_PATH = pathlib.Path(__file__).parent.resolve()
+
+        # setup jinja2 
+        a = aiohttp_jinja2.setup(app,
+            loader=jinja2.FileSystemLoader(
+                f'{BASE_PATH}/templates'
+                ))
+        print(a)
+        app.router.add_get('/', self.get_handler, name="index")
+        app.router.add_post('/', self.post_handler)
+
+
+        web.run_app(app, port=self.port)
 
     async def stop(self):
         await self.site.stop()
 
-    async def start(self):
-        loop = asyncio.get_event_loop()
-        try:
-            task = loop.create_task(self.listen())
-            await task
-        except Exception as e:
-            self.log.error("Exiting listener {0}".format(str(e)))
-        finally:
-            loop.close()
+    # async def start(self):
+    #     loop = asyncio.get_event_loop()
+    #     try:
+    #         task = loop.create_task(self.listen())
+    #         await task
+    #     except Exception as e:
+    #         self.log.error("Exiting listener {0}".format(str(e)))
+    #     finally:
+    #         loop.close()
 
     # Accessor functions
     def list_sensor_keys(self):
@@ -479,3 +553,4 @@ class EcoWittListener:
         if dev is None:
             return None
         return dev.get_value()
+

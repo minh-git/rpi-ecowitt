@@ -4,7 +4,7 @@ import sys
 import csv
 from pathlib import Path
 import time
-from datetime import datetime
+
 
 
 def usage():
@@ -14,18 +14,17 @@ def usage():
 async def my_handler(data, path):
     # print("In my handler")
     # print(data)
-    to_be_saved_data = {'systemtimeutc' : ""}
-    capture_fields = ['stationtype', 'runtime', 'dateutc', 'windspeedms', 'winddir',  'windgustms', 'maxdailygustms', 'rrain_piezo', 'erain_piezo', 'hrain_piezo', 'drain_piezo', 'wrain_piezo', 'mrain_piezo',
+    to_be_saved_data = {}
+    capture_fields = ['systemtimeutc', 'stationtype', 'runtime', 'dateutc', 'windspeedms', 'winddir',  'windgustms', 'maxdailygustms', 'rrain_piezo', 'erain_piezo', 'hrain_piezo', 'drain_piezo', 'wrain_piezo', 'mrain_piezo',
                       'yrain_piezo', 'solarradiation', 'uv', 'humidity',  'tempc', 'tempinc',  'baromrelhpa', 'baromabshpa', 'windchillc', 'dewpointc', 'dewpointinc', 'ip_address', 'ws90cap_volt', 'ws90_ver', 'wh90batt',  'model']
 
     for field in capture_fields:
         if field in data.keys():
             to_be_saved_data[field] = data[field]
-    print(to_be_saved_data)
-    to_be_saved_data['systemtimeutc'] = datetime.utcnow()
-
+    
     timestr = time.strftime("%Y%m%d.csv")
     my_file = Path(path + '/' + timestr)
+    print(to_be_saved_data)
 
     if my_file.is_file():
         with open(my_file, 'a') as csvfile:
@@ -50,10 +49,10 @@ if __name__ == "__main__":
     ws = ecowitt.EcoWittListener(port=sys.argv[1])
     ws.path = sys.argv[2]
     Path(ws.path).mkdir(parents=True, exist_ok=True)
-
     ws.register_listener(my_handler)
     try:
-        asyncio.run(ws.start())
+        # asyncio.run(ws.start())
+        ws.start()
     except Exception as e:
         print(str(e))
     print("Exiting")
