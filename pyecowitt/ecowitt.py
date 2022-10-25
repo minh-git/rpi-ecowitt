@@ -83,6 +83,7 @@ class EcoWittListener:
     def __init__(self, port=ECOWITT_LISTEN_PORT):
         # API Constants
         self.port = port
+        self.path = None
 
         # internal states
         self.server = None
@@ -416,11 +417,11 @@ class EcoWittListener:
             self.lastupd = time.time()
             self.parse_ws_data(weather_data)
             weather_data["ip_address"] = request.remote
-            print(self.list_sensor_keys())
             for rl in self.r_listeners:
                 try:
-                    await rl(weather_data)
-                except:
+                    await rl(weather_data,self.path)
+                except Exception as e:
+                    print(e)
                     pass
 
         return web.Response(text="OK")
